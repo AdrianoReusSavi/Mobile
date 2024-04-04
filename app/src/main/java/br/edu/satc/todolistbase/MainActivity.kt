@@ -97,7 +97,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         // Instancia o adapter passando a lista e o método que será disparado no click de item
-        toDoItemAdapter = ToDoItemAdapter(toDoItemList, itemOnClick)
+        toDoItemAdapter = ToDoItemAdapter(toDoItemList, itemOnClick, db)
 
         // Informa nosso recycler view qual adapter irá cuidar de seus dados
         rv.adapter = toDoItemAdapter
