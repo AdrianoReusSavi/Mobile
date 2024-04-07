@@ -8,14 +8,6 @@ import androidx.room.Update
 
 @Dao
 interface ToDoItemDao {
-
-    /**
-     * Esta interface define os métodos de comunicação com o banco de dados usando SQL
-     * Crie métodos de insert, update e delete conforme as regras de negócio da App
-     *
-     * Monte a lógica SQL usando a declaração @Query e utilize parâmetros conforme os exemplos
-     */
-
     @Query("SELECT * FROM todoitens WHERE uid = :uid")
     fun getToDoItem(uid: Int): ToDoItem
 

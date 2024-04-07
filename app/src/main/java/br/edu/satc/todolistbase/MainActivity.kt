@@ -1,5 +1,6 @@
 package br.edu.satc.todolistbase
 
+import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
@@ -27,77 +28,28 @@ class MainActivity : AppCompatActivity() {
 
         loadData()
 
-        // Pega a referência de nosso botão FloatActionButton e seu click
         findViewById<FloatingActionButton>(R.id.fab).setOnClickListener {
-
-            val it = Intent(this, NewItemActivity::class.java)
-            startActivity(it)
-
-            // Inclusao fake. Add um item na lista
-            // cria o item
-            //val item = ToDoItem(
-            //    toDoItemList.size,
-            //    "Item de teste ${toDoItemList.size + 1}"
-            //)
-            // add o item na lista
-            //toDoItemList.add(item)
-            // informa o adapter que houve uma atualizacao na lista para ele refletir isso em tela
-            //toDoItemAdapter.notifyItemChanged(toDoItemList.size-1)
-            // Salva no banco de dados
-            //db.toDoItemDao().insertAll(item)
+            val intent = Intent(this, NewItemActivity::class.java)
+            startActivityForResult(intent, NEW_ITEM_REQUEST_CODE)
         }
     }
 
-    /**
-     * Inicializa o banco de dados.
-     * Instancia AppDatabase passando o nome do banco que queremos abrir.
-     * É importante lembrarmos que abrir e fechar um banco de dados é algo custoso.
-     * Portanto deixamos esse banco aberto enquanto queremos usar para insert, update, read, delete.
-     *
-     * Com o database iniciado temos acesso a interface DAO que disponibilza os metodos de
-     * interação com o banco de dados para ler, inserir ou atualizar dados.
-     */
     private fun initDatabase() {
-        // Inicializar nosso banco de dados Android Room Persistence com SQLITE
-        db = Room.databaseBuilder(
-            applicationContext,
-            AppDatabase::class.java, "database-todolist"
-        )
+        db = Room.databaseBuilder(applicationContext, AppDatabase::class.java, "database-todolist")
             .allowMainThreadQueries()
             .build()
-
-        // Utilizar a interface DAO para interagir com o database
-//        db.toDoItemDao().getAll()
-//        db.toDoItemDao().getToDoItem(itemId)
-//        db.toDoItemDao().insertAll(toDoItem)
-
     }
 
-    /**
-     * Aqui iniciamos a nossa lista de itens que irá aparecer em tela.
-     * Pegamos a referência da RecyclerView em nosso arquivo de layout
-     * Criamos o adapter
-     * Inicializamos a lista de items (ArrayList)
-     * Atribuímos a lista ao adapter e o adapter ao nosso RecyclerView
-     */
     private fun initRecyclerViewAdapter() {
-
-        // Pegar a referência de nossa RecyclerView e setar seu gerenciador de layout
         val rv = findViewById<RecyclerView>(R.id.rv_itens)
         rv.layoutManager = LinearLayoutManager(this)
-
-        // Cria nossa lista de itens que futuramente irá receber a lista de itens do banco de dados
         toDoItemList = ArrayList()
-
-        // Instancia o adapter passando a lista e o método que será disparado no click de item
         toDoItemAdapter = ToDoItemAdapter(toDoItemList, ::onItemClick, db)
-
-        // Informa nosso recycler view qual adapter irá cuidar de seus dados
         rv.adapter = toDoItemAdapter
-
     }
 
     private fun loadData() {
+        toDoItemList.clear()
         toDoItemList.addAll(db.toDoItemDao().getAll())
         toDoItemAdapter.notifyDataSetChanged()
     }
@@ -106,5 +58,16 @@ class MainActivity : AppCompatActivity() {
         item.completed = !item.completed
         db.toDoItemDao().update(item)
         toDoItemAdapter.notifyItemChanged(position)
+    }
+
+    companion object {
+        private const val NEW_ITEM_REQUEST_CODE = 1
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == NEW_ITEM_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
+            loadData()
+        }
     }
 }
