@@ -2,7 +2,6 @@ package br.edu.satc.todolistbase
 
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -14,7 +13,6 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton
 
 class MainActivity : AppCompatActivity() {
 
-    private var TAG = "MainActivity"
     private lateinit var db: AppDatabase
     private lateinit var toDoItemList: ArrayList<ToDoItem>
     private lateinit var toDoItemAdapter: ToDoItemAdapter
@@ -91,13 +89,8 @@ class MainActivity : AppCompatActivity() {
         // Cria nossa lista de itens que futuramente irá receber a lista de itens do banco de dados
         toDoItemList = ArrayList()
 
-        // Prepara nosso método de click em um item da lista
-        val itemOnClick: (Int, ToDoItem) -> Unit = { position, item ->
-            Log.d(TAG, "Click pos: $position | desc: ${item.description}")
-        }
-
         // Instancia o adapter passando a lista e o método que será disparado no click de item
-        toDoItemAdapter = ToDoItemAdapter(toDoItemList, itemOnClick, db)
+        toDoItemAdapter = ToDoItemAdapter(toDoItemList, ::onItemClick, db)
 
         // Informa nosso recycler view qual adapter irá cuidar de seus dados
         rv.adapter = toDoItemAdapter
@@ -105,7 +98,13 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun loadData() {
-        toDoItemList.addAll(db.toDoItemDao().getAll() as ArrayList<ToDoItem>)
+        toDoItemList.addAll(db.toDoItemDao().getAll())
         toDoItemAdapter.notifyDataSetChanged()
+    }
+
+    private fun onItemClick(position: Int, item: ToDoItem) {
+        item.completed = !item.completed
+        db.toDoItemDao().update(item)
+        toDoItemAdapter.notifyItemChanged(position)
     }
 }

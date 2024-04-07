@@ -17,7 +17,7 @@ interface ToDoItemDao {
      */
 
     @Query("SELECT * FROM todoitens WHERE uid = :uid")
-    fun getToDoItem(uid: String): ToDoItem
+    fun getToDoItem(uid: Int): ToDoItem
 
     @Query("SELECT * FROM todoitens")
     fun getAll(): List<ToDoItem>

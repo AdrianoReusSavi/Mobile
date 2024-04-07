@@ -1,7 +1,9 @@
 package br.edu.satc.todolistbase.data
 
+import android.graphics.Paint
+import android.os.Handler
+import android.os.Looper
 import android.view.LayoutInflater
-import android.view.TextureView
 import android.view.View
 import android.view.ViewGroup
 import android.widget.CheckBox
@@ -39,40 +41,44 @@ class ToDoItemAdapter (
      * ler informações, disparos de clicks, etc.
      */
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-
         // Pegamos o item em nossa lista que deve ser "montado" nessa view
-        var toDoItem: ToDoItem = dataSet[position]
+        val toDoItem: ToDoItem = dataSet[position]
 
         // Preenchemos os dados desse item na tela
         holder.tvTitle.text = toDoItem.title
         holder.tvDescription.text = toDoItem.description
         holder.cbCompleted.isChecked = toDoItem.completed
 
+        holder.itemView.setOnClickListener {
+            itemOnClick(position, toDoItem)
+        }
+
+        holder.cbCompleted.setOnCheckedChangeListener(null)
+
         holder.cbCompleted.setOnCheckedChangeListener { _, isChecked ->
             // Atualiza o estado do item na lista
             toDoItem.completed = isChecked
-            // Notifica o adapter sobre a mudança no item
-            notifyItemChanged(position)
             // Atualiza o estado do item no banco de dados
             updateItemInDatabase(toDoItem)
         }
 
-        // Declaramos um listener para pegarmos o evento de click na lista
-        holder.itemView.setOnClickListener {
-            /**
-             * itemOnClick é uma var da class ToDoItemAdapter que precisamos instanciar e passar
-             * durante a criação desta classe. Quando o click ocorre, chamaos o método itemOnClick.
-             * Isso serve para que o click do item possa ser tratado na Classe Activity que criou
-             * o nosso Adapter.
-              */
-            itemOnClick(position, toDoItem)
+        val strikeThroughFlag = Paint.STRIKE_THRU_TEXT_FLAG
+
+        if (toDoItem.completed) {
+            holder.tvTitle.paintFlags = holder.tvTitle.paintFlags or strikeThroughFlag
+            holder.tvDescription.paintFlags = holder.tvDescription.paintFlags or strikeThroughFlag
+        } else {
+            holder.tvTitle.paintFlags = holder.tvTitle.paintFlags and strikeThroughFlag.inv()
+            holder.tvDescription.paintFlags = holder.tvDescription.paintFlags and strikeThroughFlag.inv()
         }
     }
 
-    /**
-     * em getItemCount precisamos informar ao nosso RecyclerView.Adapter (classe pai) quantos
-     * items existem em nossa lista
-     */
+    private fun updateItemInDatabase(toDoItem: ToDoItem) {
+        db.toDoItemDao().update(toDoItem)
+        val handler = Handler(Looper.getMainLooper())
+        handler.post(::notifyDataSetChanged)
+    }
+
     override fun getItemCount(): Int {
         return dataSet.size
     }
@@ -85,18 +91,8 @@ class ToDoItemAdapter (
      * Aqui devemos usar findViewById para referenciar os itens em rv_item.xml
      */
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        var tvTitle: TextView
-        var tvDescription: TextView
-        var cbCompleted: CheckBox
-
-        init {
-            tvTitle = view.findViewById(R.id.tv_title)
-            tvDescription = view.findViewById(R.id.tv_description)
-            cbCompleted = view.findViewById(R.id.cb_completed)
-        }
-    }
-
-    private fun updateItemInDatabase(toDoItem: ToDoItem) {
-        db.toDoItemDao().update(toDoItem)
+        val tvTitle: TextView = view.findViewById(R.id.tv_title)
+        val tvDescription: TextView = view.findViewById(R.id.tv_description)
+        val cbCompleted: CheckBox = view.findViewById(R.id.cb_completed)
     }
 }
